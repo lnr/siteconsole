@@ -13,13 +13,16 @@ function Commandline( options ) {
 	var sysCommands = {
 		history : function(params) {
 			for(i in history){
-				echo(history[i]);
+				echo('<span class="command">' + history[i] + '</span>');
 			}
 		},
 		list : function(params) {
 			for (i in this) {
-				echo(i);
+				echo('<span class="command">' + i + '</span>');
 			}
+			/*$(".command").click(function() {
+				$(".commandline").val($(this).html());
+			});*/
 		},
 		quit : function(params) {
 			document.cookie = "";
@@ -167,12 +170,14 @@ function Commandline( options ) {
 	}*/
 
 	var navigateHistory = function(isUp){
-		
+		if (isUp) {
+			if (history[activeCommandInHistory-1] == undefined) return;
+		} else {
+			if (history[activeCommandInHistory] == undefined) {$(".commandline").val(""); return;}
+		}
 		activeCommandInHistory += (isUp) ? -1 : 1;
-		if (activeCommandInHistory > history.length || activeCommandInHistory == 0)
-			return;
-		var cmd = (history[activeCommandInHistory] != undefined) ? history[activeCommandInHistory] : "";
-		$(".commandline").val(cmd);
+		log(activeCommandInHistory);
+		$(".commandline").val(history[activeCommandInHistory]);
 	}
 
 	var parser = function(command) {
