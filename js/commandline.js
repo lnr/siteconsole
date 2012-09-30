@@ -176,7 +176,6 @@ function Commandline( options ) {
 			if (history[activeCommandInHistory] == undefined) {$(".commandline").val(""); return;}
 		}
 		activeCommandInHistory += (isUp) ? -1 : 1;
-		log(activeCommandInHistory);
 		$(".commandline").val(history[activeCommandInHistory]);
 	}
 
