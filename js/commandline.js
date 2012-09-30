@@ -31,13 +31,24 @@ function Commandline( options ) {
 			$(".console-content").empty();
 		},
 		man : function(params) {
-			if(params.length > 1) {
-				throw("invalid parametrs");
+			if(params.length != 1) {
+				throw('command <span class="command">man</span> has 1 parametr');
 			}
-			echo('sorry, we do not have manual for <span class="command">' + params[0], "bold");
+			if(manuals[params[0]] != undefined) {
+				echo(manuals[params[0]]);
+			} else {
+				echo('no manual for <span class="command">' + params[0], "bold");
+			}
 		}
 
 		/* add commands here */
+	},
+	manuals = {
+		history : "output command history with repeats, has no input paramets.",
+		list : "list of available system commands",
+		quit : "quit from console, and destroy it",
+		clear : "clears console",
+		man : "man [command] <br/><br/>man shows manual for command, has one input paramet - command name. <br/><br/>Example: man list"
 	}
 
 	/*--- make options ---*/
@@ -156,9 +167,10 @@ function Commandline( options ) {
 	}*/
 
 	var navigateHistory = function(isUp){
+		
+		activeCommandInHistory += (isUp) ? -1 : 1;
 		if (activeCommandInHistory > history.length || activeCommandInHistory == 0)
 			return;
-		activeCommandInHistory += (isUp) ? -1 : 1;
 		var cmd = (history[activeCommandInHistory] != undefined) ? history[activeCommandInHistory] : "";
 		$(".commandline").val(cmd);
 	}
@@ -169,9 +181,10 @@ function Commandline( options ) {
 			history.push(command)
 			refreshCommandsCookies();
 			fillHistory();
+			echo('<br>execute command <span class="command">' + command + '</span>:', "bold");
 			var cmd = $.trim(command).split(" ").reverse();
+			// first element of cmd is command, the rest is parametrs
 			command = cmd.pop();
-			
 			that.execComand(command, cmd)
 
 			// $(".helper .line").hide();
@@ -183,10 +196,9 @@ function Commandline( options ) {
 
 	this.execComand = function(command, params) {
 		if (sysCommands[command] != undefined) {
-			echo('<br>execute command <span class="command">' + command + '</span>:', "bold");
 			return sysCommands[command](params || {});
 		} else {
-			throw('unknown command <span class="command">' + command + '</span>');
+			throw('unknown command <span class="command">' + command + '</span> use <span class="command">list</span> to see the list of available commands');
 		}
 	}
 
