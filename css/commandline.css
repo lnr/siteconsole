@@ -7,11 +7,11 @@
 	/*opacity: 0.5;*/
 	font-family: monospace;
 	color:white;
-	overflow: hidden;
 	}
 
 	#siteConsole .console{
-		height: 480px;
+		height: 470px;
+		overflow-y:scroll;
 		}
 
 	#siteConsole .commandline{

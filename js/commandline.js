@@ -12,11 +12,9 @@ function Commandline( options ) {
 
 	var sysCommands = {
 		history : function(params) {
-			echo("history:", "bold");
 			for(i in history){
 				echo(history[i]);
 			}
-			echo("history end", "bold");
 		},
 		list : function(params) {
 			for (i in this) {
@@ -30,7 +28,7 @@ function Commandline( options ) {
 			isInit = false;
 		},
 		clear : function(params) {
-			$(".console").empty();
+			$(".console-content").empty();
 		},
 		man : function(params) {
 			if(params.length > 1) {
@@ -38,7 +36,10 @@ function Commandline( options ) {
 			}
 			echo('sorry, we do not have manual for <span class="command">' + params[0], "bold");
 		}
+
+		/* add commands here */
 	}
+
 	/*--- make options ---*/
 	for(var option in defaultOptions) {
 		this[option] = options && options[option] !== undefined ? options[option] : defaultOptions[option];
@@ -171,12 +172,13 @@ function Commandline( options ) {
 			var cmd = $.trim(command).split(" ").reverse();
 			command = cmd.pop();
 			
-			return that.execComand(command, cmd)
-			
+			that.execComand(command, cmd)
+
 			// $(".helper .line").hide();
 		} catch (e) {
 			echo('<br><span style="color:red">' + e + '</span>');
 		}
+		$('.console').animate({scrollTop: $(".console-content").height()}, 'slow');
 	}
 
 	this.execComand = function(command, params) {
@@ -201,7 +203,7 @@ function Commandline( options ) {
 		if ($('div').is('#' + widgetHtmlId)) {
 			$('#' + widgetHtmlId).remove();
 		}
-		$("body").append('<div id="' + widgetHtmlId + '"><div class="console"></div><input type="text" class="commandline" /><div class="helper"></div></div>');
+		$("body").append('<div id="' + widgetHtmlId + '"><div class="console"><div class="console-content"></div></div><input type="text" class="commandline" /><div class="helper"></div></div>');
 		$('#' + widgetHtmlId + " .commandline").focus();
 	}
 
@@ -215,7 +217,7 @@ function Commandline( options ) {
 
 	var echo = function(str, style){
 		str = (style == "bold") ? "<b>" + str + "</b>" : str;
-		$('.console').append(str + "<br>");
+		$('.console-content').append(str + "<br>");
 	}
 }
 
