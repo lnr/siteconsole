@@ -1,11 +1,15 @@
-function Commandline( options ) {
+function Commandline( inOptions ) {
 	var that = this,
 		DEBUG = true,
 		isInit = false,
 		isVisible = false,
 		widgetHtmlId = "siteConsole",
 		selector = ' .commandline',
-		defaultOptions = {},
+		options = {
+			'debug' : true,
+			'preInit' : function(){},
+			'ready' : function(){}
+		},
 		history = [],
 		historyMaxSize = 40,
 		activeCommandInHistory;
@@ -54,26 +58,20 @@ function Commandline( options ) {
 		man : "man [command] <br/><br/>man shows manual for command, has one input paramet - command name. <br/><br/>Example: man list"
 	}
 
-	/*--- make options ---*/
-	for(var option in defaultOptions) {
-		this[option] = options && options[option] !== undefined ? options[option] : defaultOptions[option];
-	}
-
-	$(document).keypress(function(e){
-		var keycode = (e.keyCode ? e.keyCode : e.which);
-		if(keycode == 96){
-			(!isInit) ? that.init() : (isVisible) ? that.hide() : that.show();
-		}
-	});
+	
 
 	/*--- public methods ---*/
 	this.init = function() {
 		try {
 			if(!isInit) {
+				options = extend(options, inOptions);
+				options.preInit();
 				generateHtml();
 				fillHistory();
 				addListeners();
+				options.ready();
 				isInit = true;
+				log("console init success");	
 			} else {
 				log("console already inited");
 			}
@@ -94,22 +92,12 @@ function Commandline( options ) {
 
 	/*--- private methods ---*/
 	var fillHistory = function() {
-		if (document.cookie.length>0) {
-			var html = '',
-				isActive = true,
-				unique = [],
-				search = 'history=',
-				sHistory = document.cookie,
-				offset = sHistory.indexOf(search);
-			if (offset == -1) return;
-			offset += search.length;
-			end = document.cookie.indexOf(";", offset)
-			if (end == -1) end = document.cookie.length;
-			sHistory = document.cookie.substring(offset, end);
-			history = unescape(sHistory).split(",");
+		var history = getCookie('history');
+		log(history);
+		if (history && false) {
 			activeCommandInHistory = history.length;
 			//log(activeCommandInHistory);
-			/*history.reverse();
+			history.reverse();
 			for(i in history) {
 				if (unique.indexOf(history[i]) == -1) {
 					unique.push(history[i]);
@@ -118,7 +106,7 @@ function Commandline( options ) {
 					html += '<div style="display:none" class="line ' + cl + '" id="command_' + i + '">' + history[i] + '</div>';
 				}
 			}
-			$(".helper").html(html);*/
+			$(".helper").html(html);
 		}
 	}
 
@@ -147,7 +135,15 @@ function Commandline( options ) {
 						helper(command);
 					}*/
 			}
-		})/*.dblclick(function(){ helper(); })*/;
+		})
+
+		$(document).keypress(function(e){
+			var keycode = (e.keyCode ? e.keyCode : e.which);
+			if(keycode == 96){
+				(!isInit) ? that.init() : (isVisible) ? that.hide() : that.show();
+			}
+		});
+		/*.dblclick(function(){ helper(); })*/;
 
 		/*$(".helper .line").click(function() {
 			$(this).parent().find(".active").removeClass("active");
@@ -170,11 +166,13 @@ function Commandline( options ) {
 	}*/
 
 	var navigateHistory = function(isUp){
+		log(activeCommandInHistory);
 		if (isUp) {
-			if (history[activeCommandInHistory-1] == undefined) return;
+			if (history[activeCommandInHistory - 1] == undefined) return;
 		} else {
 			if (history[activeCommandInHistory] == undefined) {$(".commandline").val(""); return;}
 		}
+		log(12);
 		activeCommandInHistory += (isUp) ? -1 : 1;
 		$(".commandline").val(history[activeCommandInHistory]);
 	}
@@ -208,10 +206,10 @@ function Commandline( options ) {
 
 	var refreshCommandsCookies = function() {
 		if(history.length > historyMaxSize) {
-			history.reverse().pop();
-			history.reverse();
+			history.reverse().pop().reverse();
+		//	history.reverse();
 		}
-		document.cookie = "history=" + escape( history.join(",") ) + ";";
+		setCookie('history', history.join(","));
 	}
 
 	
@@ -226,14 +224,51 @@ function Commandline( options ) {
 	
 
 	/*--servise--*/
+	var extend = function(to, from) {
+		for (var key in from)
+			if (from.hasOwnProperty(key))
+				to[key] = from[key];
+		return to;
+	}
+
 	var log = function(q) {
-		if(!DEBUG) return;
-		console.log(q);
+		options.debug && console.log(q);
 	}
 
 	var echo = function(str, style){
 		str = (style == "bold") ? "<b>" + str + "</b>" : str;
 		$('.console-content').append(str + "<br>");
+	}
+
+	var getCookie = function( name ) {
+		var start = document.cookie.indexOf( name + "=" );
+		var len = start + name.length + 1;
+		if ( (!start) && (name != document.cookie.substring( 0, name.length)) || (start == -1) )
+			return null;
+		var end = document.cookie.indexOf(';', len);
+		if (end == -1) end = document.cookie.length;
+		return unescape(document.cookie.substring(len, end));
+	}
+
+	var setCookie = function(name, value, expires, path, domain, secure) {
+		var today = new Date();
+		today.setTime(today.getTime());
+		if (expires) {
+			expires = expires * 1000 * 60 * 60 * 24;
+		}
+		var expires_date = new Date( today.getTime() + (expires));
+		document.cookie = name + '=' + escape( value ) +
+		((expires) ? ';expires='+expires_date.toGMTString() : '' ) + //expires.toGMTString()
+		((path) ? ';path=' + path : '' ) +
+		((domain) ? ';domain=' + domain : '' ) +
+		((secure) ? ';secure' : '' );
+	}
+
+	var deleteCookie = function(name, path, domain) {
+		if (getCookie(name)) document.cookie = name + '=' +
+		((path) ? ';path=' + path : '') +
+		((domain) ? ';domain=' + domain : '' ) +
+		';expires=Thu, 01-Jan-1970 00:00:01 GMT';
 	}
 }
 
